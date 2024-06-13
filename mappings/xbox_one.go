@@ -6,6 +6,8 @@ const (
 	XboxOneX = 2
 	XboxOneY = 3
 
+	XboxStickMax = 32767
+
 	XboxLeftStickX = 0
 	XboxLeftStickY = 1
 
@@ -18,4 +20,6 @@ const (
 
 	XboxDpadHorizontal = 6
 	XboxDpadVertical   = 7
+
+	XboxDeadzone = 0.1
 )
