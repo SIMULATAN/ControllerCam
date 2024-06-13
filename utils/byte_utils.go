@@ -1,6 +1,9 @@
 package utils
 
-import "fmt"
+import (
+	"encoding/hex"
+	"fmt"
+)
 
 func DumpByteSlice(b []byte) string {
 	result := ""
@@ -23,4 +26,9 @@ func BytesEqual(a, b []byte) bool {
 		}
 	}
 	return true
+}
+
+func ParseSingleByte(input string) byte {
+	result, _ := hex.DecodeString(input)
+	return result[0]
 }
