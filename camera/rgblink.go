@@ -15,6 +15,10 @@ func CAM_Brightness(p byte, q byte) []byte {
 	return []byte{0x01, 0x04, 0xA1, 0x00, 0x00, p, q}
 }
 
+func RecallPreset(number uint8) []byte {
+	return []byte{0x01, 0x04, 0x3F, 0x02, number}
+}
+
 type RGBLink struct {
 	deviceId int
 }

@@ -1,6 +1,7 @@
 package camera
 
 import (
+	"controllercontrol/mappings"
 	"controllercontrol/utils"
 	"fmt"
 	"github.com/josh23french/visca"
@@ -37,10 +38,11 @@ func InterpretResponse(packet *visca.Packet) string {
 }
 
 type ProtocolHandler struct {
-	conn *visca.Connection
+	conn       *visca.Connection
+	controller mappings.Controller
 }
 
-func NewProtocolHandler(connectionString string) (*ProtocolHandler, error) {
+func NewProtocolHandler(connectionString string, controller mappings.Controller) (*ProtocolHandler, error) {
 	conn, err := visca.NewConnectionFromString(connectionString)
 	if err != nil {
 		return nil, err
@@ -55,7 +57,8 @@ func NewProtocolHandler(connectionString string) (*ProtocolHandler, error) {
 	}
 
 	return &ProtocolHandler{
-		conn: &conn,
+		conn:       &conn,
+		controller: controller,
 	}, nil
 }
 

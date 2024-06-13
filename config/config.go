@@ -1,12 +1,11 @@
 package config
 
-import "controllercontrol/mappings"
-
 type Config struct {
 	Camera     CameraConfig     `yaml:"camera"`
 	Controller ControllerConfig `yaml:"controller"`
 	CameraHost string           `yaml:"camera_host"`
 	JoystickId int              `yaml:"joystick_id"`
+	Mappings   MappingsConfig   `yaml:"mappings"`
 }
 
 type CameraConfig struct {
@@ -31,7 +30,7 @@ func NewConfig() *Config {
 		Controller: ControllerConfig{
 			PanTiltExponent: 1,
 			ZoomExponent:    1,
-			Deadzone:        mappings.XboxDeadzone,
+			Deadzone:        0.1,
 		},
 		JoystickId: 0,
 	}

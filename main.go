@@ -4,6 +4,7 @@ import (
 	"controllercontrol/camera"
 	"controllercontrol/config"
 	"controllercontrol/mappings"
+	"controllercontrol/utils"
 	"fmt"
 	"log"
 	"time"
@@ -33,7 +34,7 @@ func run() error {
 	fmt.Printf("   Axis Count: %d\n", js.AxisCount())
 	fmt.Printf(" Button Count: %d\n", js.ButtonCount())
 
-	handler, err := camera.NewProtocolHandler(cfg.CameraHost)
+	handler, err := camera.NewProtocolHandler(cfg.CameraHost, &mappings.XboxController{})
 	if err != nil {
 		return err
 	}
@@ -49,10 +50,10 @@ func run() error {
 		fmt.Printf("Axis Data: %v\n", state.AxisData)
 		fmt.Printf("Button Data: %v\n", state.Buttons)
 		fmt.Printf("Button States: [%v, %v, %v, %v]\n",
-			GetButtonState(state.Buttons, mappings.XboxOneA),
-			GetButtonState(state.Buttons, mappings.XboxOneB),
-			GetButtonState(state.Buttons, mappings.XboxOneX),
-			GetButtonState(state.Buttons, mappings.XboxOneY),
+			utils.GetButtonState(state.Buttons, mappings.XboxOneA),
+			utils.GetButtonState(state.Buttons, mappings.XboxOneB),
+			utils.GetButtonState(state.Buttons, mappings.XboxOneX),
+			utils.GetButtonState(state.Buttons, mappings.XboxOneY),
 		)
 
 		go camera.HandleJoystickInputs(*handler, state, cfg)
