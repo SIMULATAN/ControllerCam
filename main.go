@@ -19,7 +19,12 @@ func main() {
 }
 
 func run() error {
-	js, err := joystick.Open(0)
+	cfg, err := config.Read()
+	if err != nil {
+		return err
+	}
+
+	js, err := joystick.Open(cfg.JoystickId)
 
 	if err != nil {
 		return err
@@ -28,9 +33,7 @@ func run() error {
 	fmt.Printf("   Axis Count: %d\n", js.AxisCount())
 	fmt.Printf(" Button Count: %d\n", js.ButtonCount())
 
-	cfg := config.NewConfig()
-
-	handler, err := camera.NewProtocolHandler("tcp://172.17.52.113:1259")
+	handler, err := camera.NewProtocolHandler(cfg.CameraHost)
 	if err != nil {
 		return err
 	}
