@@ -8,7 +8,7 @@ require (
 	github.com/adrg/xdg v0.4.0
 	github.com/josh23french/visca v0.1.2-0.20230604144431-add011938f89
 	github.com/rs/zerolog v1.33.0
-	gopkg.in/yaml.v3 v3.0.0-20210105161348-2e78108cf5f8
+	gopkg.in/yaml.v3 v3.0.0
 )
 
 require (
