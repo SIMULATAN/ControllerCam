@@ -17,22 +17,25 @@ func HandleJoystickInputs(handler ProtocolHandler, state joystick.State, config 
 func HandlePanTilt(handler ProtocolHandler, state joystick.State, cfg *config.Config) {
 	step := cfg.Camera.Step
 
-	pan := float64(state.AxisData[mappings.XboxLeftStickX]) / mappings.XboxStickMax
-	pan = utils.CalculateExponentialValue(pan, cfg.Controller.PanTiltExponent)
-	panOffset := int16(pan * step)
-	tilt := float64(state.AxisData[mappings.XboxLeftStickY]) / mappings.XboxStickMax
-	tilt = utils.CalculateExponentialValue(tilt, cfg.Controller.PanTiltExponent)
-	tiltOffset := -1 * int16(tilt*step)
+	panPercentRaw := float64(state.AxisData[mappings.XboxLeftStickX]) / mappings.XboxStickMax
+	panPercent := utils.CalculateExponentialValue(panPercentRaw, cfg.Controller.PanTiltExponent)
+	panOffset := int16(math.RoundToEven(panPercent * step))
+	panSpeed := int16(float64(cfg.Camera.PanSpeed) * panPercent)
+
+	tiltPercentRaw := float64(state.AxisData[mappings.XboxLeftStickY]) / mappings.XboxStickMax
+	tiltPercent := utils.CalculateExponentialValue(tiltPercentRaw, cfg.Controller.PanTiltExponent)
+	tiltOffset := -1 * int16(math.RoundToEven(tiltPercent*step))
+	tiltSpeed := int16(float64(cfg.Camera.PanSpeed) * tiltPercent)
 
 	byteSlice := PanTilt(
-		cfg.Camera.PanSpeed*(1+int16(pan)*4),
-		cfg.Camera.TiltSpeed*(1+int16(tilt)*4),
+		panSpeed,
+		tiltSpeed,
 		panOffset,
 		tiltOffset,
 		true,
 	)
 
-	if (tiltOffset != 0 && math.Abs(tilt) > mappings.XboxDeadzone) || (panOffset != 0 && math.Abs(pan) > mappings.XboxDeadzone) {
+	if (tiltOffset != 0 && math.Abs(tiltPercentRaw) > mappings.XboxDeadzone) || (panOffset != 0 && math.Abs(panPercentRaw) > mappings.XboxDeadzone) {
 		handler.SendPacketYolo(byteSlice)
 	}
 }
