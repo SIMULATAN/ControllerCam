@@ -11,8 +11,8 @@ type Controller interface {
 	GetMapping(name string) *config.Input
 }
 
-func IsTriggered(c Controller, presetMapping *config.PresetMapping, state joystick.State) bool {
-	mapping := c.GetMapping(presetMapping.Button)
+func IsTriggered(c Controller, presetMapping config.Mapping, state joystick.State) bool {
+	mapping := c.GetMapping(presetMapping.GetButton())
 	if mapping == nil {
 		return false
 	}

@@ -1,17 +1,23 @@
 package config
 
 type Config struct {
-	Camera     CameraConfig     `yaml:"camera"`
-	Controller ControllerConfig `yaml:"controller"`
-	CameraHost string           `yaml:"camera_host"`
-	JoystickId int              `yaml:"joystick_id"`
-	Mappings   MappingsConfig   `yaml:"mappings"`
+	DefaultCameraProperties CameraProperties `yaml:"default_camera_properties"`
+	Controller              ControllerConfig `yaml:"controller"`
+	Cameras                 []CameraConfig   `yaml:"cameras"`
+	JoystickId              int              `yaml:"joystick_id"`
+	Mappings                MappingsConfig   `yaml:"mappings"`
 }
 
 type CameraConfig struct {
-	PanSpeed  int16   `yaml:"pan_speed"`
-	TiltSpeed int16   `yaml:"tilt_speed"`
-	Step      float64 `yaml:"step"`
+	Name       string           `yaml:"name"`
+	Host       string           `yaml:"host"`
+	Properties CameraProperties `yaml:"properties"`
+}
+
+type CameraProperties struct {
+	PanSpeed  *int16   `yaml:"pan_speed"`
+	TiltSpeed *int16   `yaml:"tilt_speed"`
+	Step      *float64 `yaml:"step"`
 }
 
 type ControllerConfig struct {
@@ -20,12 +26,15 @@ type ControllerConfig struct {
 	Deadzone        float64 `yaml:"deadzone"`
 }
 
+var DefaultSpeed int16 = 25
+var DefaultStep float64 = 50
+
 func NewConfig() *Config {
 	return &Config{
-		Camera: CameraConfig{
-			PanSpeed:  25,
-			TiltSpeed: 25,
-			Step:      20,
+		DefaultCameraProperties: CameraProperties{
+			PanSpeed:  &DefaultSpeed,
+			TiltSpeed: &DefaultSpeed,
+			Step:      &DefaultStep,
 		},
 		Controller: ControllerConfig{
 			PanTiltExponent: 1,

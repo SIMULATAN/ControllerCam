@@ -57,6 +57,26 @@ func (c *XboxController) GetMapping(name string) *config.Input {
 			Index: XboxDpadHorizontal,
 			Data:  1,
 		}
+	case "ButtonA":
+		return &config.Input{
+			Type:  config.InputType_Button,
+			Index: XboxOneA,
+		}
+	case "ButtonB":
+		return &config.Input{
+			Type:  config.InputType_Button,
+			Index: XboxOneB,
+		}
+	case "ButtonX":
+		return &config.Input{
+			Type:  config.InputType_Button,
+			Index: XboxOneX,
+		}
+	case "ButtonY":
+		return &config.Input{
+			Type:  config.InputType_Button,
+			Index: XboxOneY,
+		}
 	}
 
 	log.Warn().Msgf("Could not find any input mapping for %v", name)

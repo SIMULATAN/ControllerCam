@@ -1,6 +1,7 @@
 package camera
 
 import (
+	"controllercontrol/config"
 	"controllercontrol/mappings"
 	"controllercontrol/utils"
 	"fmt"
@@ -37,44 +38,70 @@ func InterpretResponse(packet *visca.Packet) string {
 	return utils.DumpByteSlice(packet.Message)
 }
 
-type ProtocolHandler struct {
-	conn       *visca.Connection
-	controller mappings.Controller
+type Camera struct {
+	conn   *visca.Connection
+	config config.CameraConfig
 }
 
-func NewProtocolHandler(connectionString string, controller mappings.Controller) (*ProtocolHandler, error) {
-	conn, err := visca.NewConnectionFromString(connectionString)
-	if err != nil {
-		return nil, err
+type ProtocolHandler struct {
+	controller mappings.Controller
+	cameras    []Camera
+}
+
+func (p *ProtocolHandler) GetCameraByName(name string) *Camera {
+	for _, camera := range p.cameras {
+		if camera.config.Name == name {
+			return &camera
+		}
+	}
+	return nil
+}
+
+func NewProtocolHandler(cameraConfigs []config.CameraConfig, controller mappings.Controller) (*ProtocolHandler, error) {
+	cameras := make([]Camera, len(cameraConfigs))
+	for _, camera := range cameraConfigs {
+		conn, err := visca.NewConnectionFromString(camera.Host)
+		if err != nil {
+			return nil, err
+		}
+
+		queue := make(chan *visca.Packet)
+		conn.SetReceiveQueue(queue)
+		go RunLogQueue(queue)
+		err = conn.Start()
+		if err != nil {
+			continue
+		}
+
+		cameras = append(cameras, Camera{
+			conn:   &conn,
+			config: camera,
+		})
 	}
 
-	queue := make(chan *visca.Packet)
-	conn.SetReceiveQueue(queue)
-	go RunLogQueue(queue)
-	err = conn.Start()
-	if err != nil {
-		return nil, err
+	if len(cameras) == 0 {
+		return nil, fmt.Errorf("no cameras found")
 	}
 
 	return &ProtocolHandler{
-		conn:       &conn,
+		cameras:    cameras,
 		controller: controller,
 	}, nil
 }
 
-func (p *ProtocolHandler) SendPacket(bytes []byte) error {
+func (c *Camera) SendPacket(bytes []byte) error {
 	// Send the packet we created
 	packet, err := BuildPacket(bytes)
 	if err != nil {
 		return err
 	}
-	err = (*p.conn).Send(packet)
+	err = (*c.conn).Send(packet)
 	return err
 }
 
 // SendPacketYolo same as SendPacket but just logs the error
-func (p *ProtocolHandler) SendPacketYolo(bytes []byte) {
-	err := p.SendPacket(bytes)
+func (c *Camera) SendPacketYolo(bytes []byte) {
+	err := c.SendPacket(bytes)
 	if err != nil {
 		fmt.Println(err)
 	}

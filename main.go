@@ -34,7 +34,7 @@ func run() error {
 	fmt.Printf("   Axis Count: %d\n", js.AxisCount())
 	fmt.Printf(" Button Count: %d\n", js.ButtonCount())
 
-	handler, err := camera.NewProtocolHandler(cfg.CameraHost, &mappings.XboxController{})
+	handler, err := camera.NewProtocolHandler(cfg.Cameras, &mappings.XboxController{})
 	if err != nil {
 		return err
 	}
