@@ -3,6 +3,7 @@ package main
 import (
 	"controllercontrol/camera"
 	"controllercontrol/config"
+	"controllercontrol/gui"
 	"controllercontrol/mappings"
 	"controllercontrol/utils"
 	"fmt"
@@ -34,9 +35,16 @@ func run() error {
 	fmt.Printf("   Axis Count: %d\n", js.AxisCount())
 	fmt.Printf(" Button Count: %d\n", js.ButtonCount())
 
+	go handleLoop(cfg, js)
+
+	err = gui.RunGui()
+	return err
+}
+
+func handleLoop(cfg *config.Config, js joystick.Joystick) {
 	handler, err := camera.NewProtocolHandler(cfg.Cameras, &mappings.XboxController{})
 	if err != nil {
-		return err
+		log.Fatalln("Error creating ProtocolHandler!", err)
 	}
 
 	for {
@@ -61,6 +69,4 @@ func run() error {
 		time.Sleep(50 * time.Millisecond)
 	}
 	js.Close()
-
-	return nil
 }
