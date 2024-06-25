@@ -36,7 +36,7 @@ func run() error {
 	fmt.Printf("   Axis Count: %d\n", js.AxisCount())
 	fmt.Printf(" Button Count: %d\n", js.ButtonCount())
 
-	states := state.NewStates(mappings.Buttons)
+	states := state.NewStates(mappings.Buttons, mappings.Sticks)
 
 	go handleLoop(cfg, js, &states)
 

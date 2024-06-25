@@ -106,8 +106,32 @@ var ButtonY = state.ButtonState{
 	State: false,
 }
 
+var StickLeftX = state.StickState{
+	Id:    XboxLeftStickX,
+	Name:  "Left X",
+	State: 0,
+}
+var StickLeftY = state.StickState{
+	Id:    XboxLeftStickY,
+	Name:  "Left Y",
+	State: 0,
+}
+
+var StickRightX = state.StickState{
+	Id:    XboxRightStickX,
+	Name:  "Right X",
+	State: 0,
+}
+var StickRightY = state.StickState{
+	Id:    XboxRightStickY,
+	Name:  "Right Y",
+	State: 0,
+}
+
 var Buttons = []state.ButtonState{ButtonA, ButtonB, ButtonX, ButtonY}
+var Sticks = []state.StickState{StickLeftX, StickLeftY, StickRightX, StickRightY}
 
 func UpdateStates(js joystick.State) {
-	updateStatesById(js, Buttons)
+	updateButtonStates(js, Buttons)
+	updateStickStates(js, Sticks)
 }

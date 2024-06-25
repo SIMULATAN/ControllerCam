@@ -8,7 +8,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func buttonStates(states *state.States) fyne.CanvasObject {
+func buttonStates(states *state.States) (fyne.CanvasObject, []*widget.Icon) {
 	icons := make([]*widget.Icon, len(states.Buttons))
 	list := widget.NewList(
 		func() int {
@@ -21,25 +21,24 @@ func buttonStates(states *state.States) fyne.CanvasObject {
 			return box
 		},
 		func(i widget.ListItemID, obj fyne.CanvasObject) {
-			button := states.Buttons[i]
+			buttonState := states.Buttons[i]
 			box := obj.(*fyne.Container)
 			iconWidget := box.Objects[0].(*widget.Icon)
 			icons[i] = iconWidget
-			setStateIcon(icons, i, states)
-			box.Objects[1].(*widget.Label).SetText(button.Name)
+			setStateIcon(iconWidget, buttonState)
+			box.Objects[1].(*widget.Label).SetText(buttonState.Name)
 		},
 	)
-	states.UpdateCallback = func() {
-		for i := range states.Buttons {
-			setStateIcon(icons, i, states)
-		}
-	}
-	return container.NewStack(list)
+	return container.NewStack(list), icons
 }
 
-func setStateIcon(icons []*widget.Icon, i int, states *state.States) {
-	icon := icons[i]
-	button := states.Buttons[i]
+func updateButtonStates(icons []*widget.Icon, states *state.States) {
+	for i := range states.Buttons {
+		setStateIcon(icons[i], states.Buttons[i])
+	}
+}
+
+func setStateIcon(icon *widget.Icon, button state.ButtonState) {
 	if button.State {
 		icon.Resource = theme.ConfirmIcon()
 	} else {

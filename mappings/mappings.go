@@ -36,8 +36,14 @@ func IsTriggered(c Controller, presetMapping config.Mapping, state joystick.Stat
 	}
 }
 
-func updateStatesById(js joystick.State, buttons []state.ButtonState) {
+func updateButtonStates(js joystick.State, buttons []state.ButtonState) {
 	for i := range buttons {
 		buttons[i].State = utils.GetButtonState(js.Buttons, uint32(buttons[i].Id))
+	}
+}
+
+func updateStickStates(js joystick.State, sticks []state.StickState) {
+	for i := range sticks {
+		sticks[i].State = float64(js.AxisData[sticks[i].Id]) / float64(XboxStickMax)
 	}
 }
