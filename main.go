@@ -5,6 +5,7 @@ import (
 	"controllercontrol/config"
 	"controllercontrol/gui"
 	"controllercontrol/mappings"
+	"controllercontrol/state"
 	"controllercontrol/utils"
 	"fmt"
 	"log"
@@ -35,36 +36,41 @@ func run() error {
 	fmt.Printf("   Axis Count: %d\n", js.AxisCount())
 	fmt.Printf(" Button Count: %d\n", js.ButtonCount())
 
-	go handleLoop(cfg, js)
+	states := state.NewStates(mappings.Buttons)
 
-	err = gui.RunGui()
+	go handleLoop(cfg, js, &states)
+
+	err = gui.RunGui(&states)
 	return err
 }
 
-func handleLoop(cfg *config.Config, js joystick.Joystick) {
+func handleLoop(cfg *config.Config, js joystick.Joystick, states *state.States) {
 	handler, err := camera.NewProtocolHandler(cfg.Cameras, &mappings.XboxController{})
 	if err != nil {
 		log.Fatalln("Error creating ProtocolHandler!", err)
 	}
 
 	for {
-		state, err := js.Read()
+		controllerState, err := js.Read()
 		if err != nil {
 			log.Println("Error reading from Joystick!", err)
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 
-		fmt.Printf("Axis Data: %v\n", state.AxisData)
-		fmt.Printf("Button Data: %v\n", state.Buttons)
+		fmt.Printf("Axis Data: %v\n", controllerState.AxisData)
+		fmt.Printf("Button Data: %v\n", controllerState.Buttons)
 		fmt.Printf("Button States: [%v, %v, %v, %v]\n",
-			utils.GetButtonState(state.Buttons, mappings.XboxOneA),
-			utils.GetButtonState(state.Buttons, mappings.XboxOneB),
-			utils.GetButtonState(state.Buttons, mappings.XboxOneX),
-			utils.GetButtonState(state.Buttons, mappings.XboxOneY),
+			utils.GetButtonState(controllerState.Buttons, mappings.XboxOneA),
+			utils.GetButtonState(controllerState.Buttons, mappings.XboxOneB),
+			utils.GetButtonState(controllerState.Buttons, mappings.XboxOneX),
+			utils.GetButtonState(controllerState.Buttons, mappings.XboxOneY),
 		)
 
-		go camera.HandleJoystickInputs(*handler, state, cfg)
+		mappings.UpdateStates(controllerState)
+		states.UpdateCallback()
+
+		go camera.HandleJoystickInputs(*handler, controllerState, cfg)
 
 		time.Sleep(50 * time.Millisecond)
 	}

@@ -2,6 +2,7 @@ package mappings
 
 import (
 	"controllercontrol/config"
+	"controllercontrol/state"
 	"controllercontrol/utils"
 	"github.com/0xcafed00d/joystick"
 	"github.com/rs/zerolog/log"
@@ -32,5 +33,11 @@ func IsTriggered(c Controller, presetMapping config.Mapping, state joystick.Stat
 	default:
 		log.Warn().Msgf("Could not handle input of type %v", mapping.Type)
 		return false
+	}
+}
+
+func updateStatesById(js joystick.State, buttons []state.ButtonState) {
+	for i := range buttons {
+		buttons[i].State = utils.GetButtonState(js.Buttons, uint32(buttons[i].Id))
 	}
 }

@@ -2,6 +2,8 @@ package mappings
 
 import (
 	"controllercontrol/config"
+	"controllercontrol/state"
+	"github.com/0xcafed00d/joystick"
 	"github.com/rs/zerolog/log"
 )
 
@@ -81,4 +83,31 @@ func (c *XboxController) GetMapping(name string) *config.Input {
 
 	log.Warn().Msgf("Could not find any input mapping for %v", name)
 	return nil
+}
+
+var ButtonA = state.ButtonState{
+	Id:    XboxOneA,
+	Name:  "A",
+	State: false,
+}
+var ButtonB = state.ButtonState{
+	Id:    XboxOneB,
+	Name:  "B",
+	State: false,
+}
+var ButtonX = state.ButtonState{
+	Id:    XboxOneX,
+	Name:  "X",
+	State: false,
+}
+var ButtonY = state.ButtonState{
+	Id:    XboxOneY,
+	Name:  "Y",
+	State: false,
+}
+
+var Buttons = []state.ButtonState{ButtonA, ButtonB, ButtonX, ButtonY}
+
+func UpdateStates(js joystick.State) {
+	updateStatesById(js, Buttons)
 }

@@ -1,15 +1,19 @@
 package gui
 
 import (
+	"controllercontrol/state"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/driver/desktop"
-	"fyne.io/fyne/v2/widget"
 )
 
-func RunGui() error {
+var topWindow fyne.Window
+
+func RunGui(states *state.States) error {
 	a := app.NewWithID("me.simulatan.controllercam")
 	window := a.NewWindow("ControllerCam")
+	topWindow = window
 	path, err := fyne.LoadResourceFromPath("logo.png")
 	if err != nil {
 		return err
@@ -17,18 +21,31 @@ func RunGui() error {
 	a.SetIcon(path)
 
 	if desk, ok := a.(desktop.App); ok {
-		menu := fyne.NewMenu("ControllerCam",
-			fyne.NewMenuItem("Show", func() {
-				window.Show()
-			}),
-			fyne.NewMenuItem("Quit", func() {
-				a.Quit()
-			}),
-		)
-		desk.SetSystemTrayMenu(menu)
+		makeTray(window, a, desk)
 	}
 
-	window.SetContent(widget.NewLabel("Hello World!"))
+	content := container.NewStack()
+
+	setContent := func(p Page) {
+		if fyne.CurrentDevice().IsMobile() {
+			child := a.NewWindow(p.Title)
+			window = child
+			child.SetContent(p.View(topWindow, states))
+			child.Show()
+			child.SetOnClosed(func() {
+				topWindow = window
+			})
+			return
+		}
+
+		content.Objects = []fyne.CanvasObject{p.View(window, states)}
+		content.Refresh()
+	}
+
+	split := container.NewHSplit(makeNav(setContent), content)
+	// give the nav 20% of the window width
+	split.Offset = 0.2
+	window.SetContent(split)
 	window.SetCloseIntercept(func() {
 		window.Hide()
 	})
