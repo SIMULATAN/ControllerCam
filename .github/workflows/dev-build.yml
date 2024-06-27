@@ -1,0 +1,36 @@
+on: push
+
+jobs:
+  compile:
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest, windows-latest, macos-latest]
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+        include:
+          - runs-on: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - runs-on: windows-latest
+            goos: windows
+            goarch: amd64
+          - runs-on: macos-latest
+            goos: darwin
+            goarch: amd64
+          - runs-on: macos-latest
+            goos: darwin
+            goarch: arm64
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version-file: go.mod
+      - name: Build
+        run: GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o controllercam-${{ matrix.goos }}-${{ matrix.goarch }}
+      - name: Archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: controllercam-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: controllercam-${{ matrix.goos }}-${{ matrix.goarch }}
