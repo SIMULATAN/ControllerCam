@@ -9,17 +9,15 @@ import (
 	"fyne.io/fyne/v2/driver/desktop"
 )
 
+//go:generate fyne bundle --pkg gui -o resources.go ../logo.png
+
 var topWindow fyne.Window
 
 func RunGui(states *state.States, handler *camera.ProtocolHandler) error {
 	a := app.NewWithID("me.simulatan.controllercam")
 	window := a.NewWindow("ControllerCam")
 	topWindow = window
-	path, err := fyne.LoadResourceFromPath("logo.png")
-	if err != nil {
-		return err
-	}
-	a.SetIcon(path)
+	a.SetIcon(resourceLogoPng)
 
 	if desk, ok := a.(desktop.App); ok {
 		makeTray(window, a, desk)

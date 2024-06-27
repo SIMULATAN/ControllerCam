@@ -2,12 +2,11 @@ module controllercontrol
 
 go 1.22.4
 
-require github.com/0xcafed00d/joystick v1.0.1
-
 require (
 	fyne.io/fyne/v2 v2.4.5
 	github.com/adrg/xdg v0.4.0
 	github.com/josh23french/visca v0.1.2-0.20230604144431-add011938f89
+	github.com/0xcafed00d/joystick v1.0.2-0.20220911142540-28212e3b5a8f
 	github.com/rs/zerolog v1.33.0
 	gopkg.in/yaml.v3 v3.0.1
 )
