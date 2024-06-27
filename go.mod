@@ -2,7 +2,7 @@ module controllercontrol
 
 go 1.22.4
 
-require github.com/0xcafed00d/joystick v1.0.1
+require github.com/0xcafed00d/joystick v1.0.2-0.20220911142540-28212e3b5a8f
 
 require (
 	fyne.io/fyne/v2 v2.4.5
