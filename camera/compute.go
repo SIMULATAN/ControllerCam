@@ -5,37 +5,33 @@ import (
 	"controllercontrol/config"
 	"controllercontrol/mappings"
 	"controllercontrol/utils"
-	"fmt"
 	"github.com/0xcafed00d/joystick"
 	"math"
 )
 
 func HandleJoystickInputs(handler ProtocolHandler, state joystick.State, config *config.Config) {
 	HandleCameraSelection(handler, state, config)
-	if activeCamera == nil {
-		fmt.Println("No active camera")
+	if handler.GetActiveCamera() == nil {
 		return
 	}
-	HandlePanTilt(state, config)
-	HandleZoom(state, config)
+	HandlePanTilt(handler, state, config)
+	HandleZoom(handler, state, config)
 	HandlePresets(handler, state, config)
 }
-
-var activeCamera *Camera
 
 func HandleCameraSelection(handler ProtocolHandler, state joystick.State, cfg *config.Config) {
 	for _, item := range cfg.Mappings.Cameras {
 		if mappings.IsTriggered(handler.controller, &item, state) {
 			camera := handler.GetCameraByName(item.Camera)
-			if camera != nil && camera != activeCamera {
-				activeCamera = camera
+			if camera != nil && camera != handler.GetActiveCamera() {
+				handler.SetActiveCamera(camera)
 			}
 		}
 	}
 }
 
-func HandlePanTilt(state joystick.State, cfg *config.Config) {
-	cam := activeCamera.config.Properties
+func HandlePanTilt(handler ProtocolHandler, state joystick.State, cfg *config.Config) {
+	cam := handler.GetActiveCamera().Config.Properties
 	defaultCam := cfg.DefaultCameraProperties
 	step := *cmp.Or(cam.Step, defaultCam.Step, &config.DefaultStep)
 
@@ -60,13 +56,13 @@ func HandlePanTilt(state joystick.State, cfg *config.Config) {
 	)
 
 	if (tiltOffset != 0 && math.Abs(tiltPercentRaw) > mappings.XboxDeadzone) || (panOffset != 0 && math.Abs(panPercentRaw) > mappings.XboxDeadzone) {
-		activeCamera.SendPacketYolo(byteSlice)
+		handler.GetActiveCamera().SendPacketYolo(byteSlice)
 	}
 }
 
 var lastZoomOffset int8
 
-func HandleZoom(state joystick.State, config *config.Config) {
+func HandleZoom(handler ProtocolHandler, state joystick.State, config *config.Config) {
 	zoom := -1 * float64(state.AxisData[mappings.XboxRightStickY]) / mappings.XboxStickMax
 
 	// if within deadzone, send zoom = 0
@@ -82,7 +78,7 @@ func HandleZoom(state joystick.State, config *config.Config) {
 	// if zoom is the same as last time, don't send the packet
 	if zoomOffset != lastZoomOffset {
 		byteSlice := Zoom(zoomOffset)
-		activeCamera.SendPacketYolo(byteSlice)
+		handler.GetActiveCamera().SendPacketYolo(byteSlice)
 	}
 	lastZoomOffset = zoomOffset
 }
@@ -90,7 +86,7 @@ func HandleZoom(state joystick.State, config *config.Config) {
 func HandlePresets(handler ProtocolHandler, state joystick.State, cfg *config.Config) {
 	for _, item := range cfg.Mappings.Presets {
 		if mappings.IsTriggered(handler.controller, &item, state) {
-			activeCamera.SendPacketYolo(RecallPreset(item.Preset))
+			handler.GetActiveCamera().SendPacketYolo(RecallPreset(item.Preset))
 		}
 	}
 }

@@ -6,7 +6,6 @@ import (
 	"controllercontrol/gui"
 	"controllercontrol/mappings"
 	"controllercontrol/state"
-	"controllercontrol/utils"
 	"fmt"
 	"log"
 	"time"
@@ -38,18 +37,18 @@ func run() error {
 
 	states := state.NewStates(mappings.Buttons, mappings.Sticks)
 
-	go handleLoop(cfg, js, &states)
-
-	err = gui.RunGui(&states)
-	return err
-}
-
-func handleLoop(cfg *config.Config, js joystick.Joystick, states *state.States) {
 	handler, err := camera.NewProtocolHandler(cfg.Cameras, &mappings.XboxController{})
 	if err != nil {
 		log.Fatalln("Error creating ProtocolHandler!", err)
 	}
 
+	go handleLoop(cfg, js, &states, handler)
+
+	err = gui.RunGui(&states, handler)
+	return err
+}
+
+func handleLoop(cfg *config.Config, js joystick.Joystick, states *state.States, handler *camera.ProtocolHandler) {
 	for {
 		controllerState, err := js.Read()
 		if err != nil {
@@ -57,15 +56,6 @@ func handleLoop(cfg *config.Config, js joystick.Joystick, states *state.States) 
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-
-		fmt.Printf("Axis Data: %v\n", controllerState.AxisData)
-		fmt.Printf("Button Data: %v\n", controllerState.Buttons)
-		fmt.Printf("Button States: [%v, %v, %v, %v]\n",
-			utils.GetButtonState(controllerState.Buttons, mappings.XboxOneA),
-			utils.GetButtonState(controllerState.Buttons, mappings.XboxOneB),
-			utils.GetButtonState(controllerState.Buttons, mappings.XboxOneX),
-			utils.GetButtonState(controllerState.Buttons, mappings.XboxOneY),
-		)
 
 		mappings.UpdateStates(controllerState)
 		states.UpdateCallback()

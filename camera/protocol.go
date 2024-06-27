@@ -5,6 +5,7 @@ import (
 	"controllercontrol/mappings"
 	"controllercontrol/utils"
 	"fmt"
+	"fyne.io/fyne/v2/data/binding"
 	"github.com/josh23french/visca"
 )
 
@@ -39,18 +40,42 @@ func InterpretResponse(packet *visca.Packet) string {
 }
 
 type Camera struct {
-	conn   *visca.Connection
-	config config.CameraConfig
+	Conn   *visca.Connection
+	Config config.CameraConfig
 }
 
 type ProtocolHandler struct {
-	controller mappings.Controller
-	cameras    []Camera
+	controller   mappings.Controller
+	cameras      []Camera
+	ActiveCamera binding.Untyped
+}
+
+func (p *ProtocolHandler) GetActiveCamera() *Camera {
+	cam, err := p.ActiveCamera.Get()
+	if err == nil {
+		camAsCamera, worked := cam.(*Camera)
+		if worked {
+			return camAsCamera
+		}
+	}
+
+	return nil
+}
+
+func (p *ProtocolHandler) SetActiveCamera(camera *Camera) {
+	err := p.ActiveCamera.Set(camera)
+	if err != nil {
+		fmt.Println("Error setting active camera", err)
+	}
+}
+
+func (p *ProtocolHandler) GetCameras() []Camera {
+	return p.cameras
 }
 
 func (p *ProtocolHandler) GetCameraByName(name string) *Camera {
 	for _, camera := range p.cameras {
-		if camera.config.Name == name {
+		if camera.Config.Name == name {
 			return &camera
 		}
 	}
@@ -59,7 +84,7 @@ func (p *ProtocolHandler) GetCameraByName(name string) *Camera {
 
 func NewProtocolHandler(cameraConfigs []config.CameraConfig, controller mappings.Controller) (*ProtocolHandler, error) {
 	cameras := make([]Camera, len(cameraConfigs))
-	for _, camera := range cameraConfigs {
+	for i, camera := range cameraConfigs {
 		conn, err := visca.NewConnectionFromString(camera.Host)
 		if err != nil {
 			return nil, err
@@ -69,23 +94,27 @@ func NewProtocolHandler(cameraConfigs []config.CameraConfig, controller mappings
 		conn.SetReceiveQueue(queue)
 		go RunLogQueue(queue)
 		err = conn.Start()
-		if err != nil {
-			continue
-		}
 
-		cameras = append(cameras, Camera{
-			conn:   &conn,
-			config: camera,
-		})
+		var connection *visca.Connection = nil
+		if err == nil {
+			connection = &conn
+		}
+		cameras[i] = Camera{
+			Conn:   connection,
+			Config: camera,
+		}
 	}
 
 	if len(cameras) == 0 {
 		return nil, fmt.Errorf("no cameras found")
 	}
 
+	fmt.Printf("Created %v cameras: %+v\n", len(cameras), cameras)
+
 	return &ProtocolHandler{
-		cameras:    cameras,
-		controller: controller,
+		cameras:      cameras,
+		controller:   controller,
+		ActiveCamera: binding.NewUntyped(),
 	}, nil
 }
 
@@ -95,7 +124,10 @@ func (c *Camera) SendPacket(bytes []byte) error {
 	if err != nil {
 		return err
 	}
-	err = (*c.conn).Send(packet)
+	if c.Conn == nil {
+		return fmt.Errorf("camera connection isn't open")
+	}
+	err = (*c.Conn).Send(packet)
 	return err
 }
 
