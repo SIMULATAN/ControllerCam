@@ -1,0 +1,32 @@
+on: push
+
+jobs:
+  compile:
+    strategy:
+      fail-fast: false
+      matrix:
+        env:
+          - {runs-on: ubuntu-latest, goos: linux, goarch: amd64}
+          - {runs-on: windows-latest, goos: windows, goarch: amd64}
+          - {runs-on: macos-latest, goos: darwin, goarch: amd64}
+          - {runs-on: macos-latest, goos: darwin, goarch: arm64}
+    runs-on: ${{ matrix.env.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install ubuntu dependencies
+        if: matrix.env.goos == 'linux'
+        run: sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev
+      - name: Build
+        env:
+          GOOS: ${{ matrix.env.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: go build -v -o controllercam-${{ matrix.env.goos }}-${{ matrix.env.goarch }}
+      - name: Archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: controllercam-${{ matrix.env.goos }}-${{ matrix.env.goarch }}
+          path: controllercam-${{ matrix.env.goos }}-${{ matrix.env.goarch }}
