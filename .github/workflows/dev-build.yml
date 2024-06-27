@@ -16,8 +16,14 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
+      - name: Install ubuntu dependencies
+        if: matrix.env.goos == 'linux'
+        run: sudo apt-get install -y libxcursor-dev
       - name: Build
-        run: GOOS=${{ matrix.env.goos }} GOARCH=${{ matrix.goarch }} go build -v -o controllercam-${{ matrix.env.goos }}-${{ matrix.env.goarch }}
+        env:
+          GOOS: ${{ matrix.env.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: go build -v -o controllercam-${{ matrix.env.goos }}-${{ matrix.env.goarch }}
       - name: Archive
         uses: actions/upload-artifact@v4
         with:
