@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	js, err := joystick.Open(1)
+	js, err := joystick.Open(0)
 	if err != nil {
 		log.Fatalln("Error opening Joystick", err)
 	}
