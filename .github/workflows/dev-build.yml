@@ -3,6 +3,7 @@ on: push
 jobs:
   compile:
     strategy:
+      fail-fast: false
       matrix:
         env:
           - {runs-on: ubuntu-latest, goos: linux, goarch: amd64}
@@ -18,7 +19,7 @@ jobs:
           go-version-file: go.mod
       - name: Install ubuntu dependencies
         if: matrix.env.goos == 'linux'
-        run: sudo apt-get install -y libxcursor-dev
+        run: sudo apt-get install -y libxcursor-dev libxrandr-dev
       - name: Build
         env:
           GOOS: ${{ matrix.env.goos }}
