@@ -6,10 +6,18 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"slices"
 )
 
-func buttonStates(states *state.States) (fyne.CanvasObject, []*widget.Icon) {
-	icons := make([]*widget.Icon, len(states.Buttons))
+func buttonStates(states *state.States) (fyne.CanvasObject, map[string]*widget.Icon) {
+	iconIndexToName := make([]string, 0)
+	for name := range states.Buttons {
+		iconIndexToName = append(iconIndexToName, name)
+	}
+	// go iteration order is not guaranteed, so we sort the names
+	slices.Sort(iconIndexToName)
+	icons := make(map[string]*widget.Icon)
+
 	list := widget.NewList(
 		func() int {
 			return len(states.Buttons)
@@ -21,20 +29,21 @@ func buttonStates(states *state.States) (fyne.CanvasObject, []*widget.Icon) {
 			return box
 		},
 		func(i widget.ListItemID, obj fyne.CanvasObject) {
-			buttonState := states.Buttons[i]
+			name := iconIndexToName[i]
+			buttonState := states.Buttons[name]
 			box := obj.(*fyne.Container)
 			iconWidget := box.Objects[0].(*widget.Icon)
-			icons[i] = iconWidget
-			setStateIcon(iconWidget, buttonState)
+			icons[name] = iconWidget
+			setStateIcon(iconWidget, *buttonState)
 			box.Objects[1].(*widget.Label).SetText(buttonState.Name)
 		},
 	)
 	return container.NewStack(list), icons
 }
 
-func updateButtonStates(icons []*widget.Icon, states *state.States) {
-	for i := range states.Buttons {
-		setStateIcon(icons[i], states.Buttons[i])
+func updateButtonStates(icons map[string]*widget.Icon, states *state.States) {
+	for name, s := range states.Buttons {
+		setStateIcon(icons[name], *s)
 	}
 }
 

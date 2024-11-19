@@ -1,49 +1,46 @@
 package mappings
 
 import (
-	"controllercontrol/config"
 	"controllercontrol/state"
-	"controllercontrol/utils"
 	"github.com/0xcafed00d/joystick"
-	"github.com/rs/zerolog/log"
+)
+
+const (
+	ButtonX = "ButtonX"
+	ButtonY = "ButtonY"
+	ButtonA = "ButtonA"
+	ButtonB = "ButtonB"
+
+	StickLeftX = "LeftStickX"
+	StickLeftY = "LeftStickY"
+
+	RightStickX = "RightStickX"
+	RightStickY = "RightStickY"
+
+	DpadUp    = "DpadUp"
+	DpadRight = "DpadRight"
+	DpadDown  = "DpadDown"
+	DpadLeft  = "DpadLeft"
 )
 
 type Controller interface {
-	GetMapping(name string) *config.Input
+	GetInitialStates() state.States
+	GetButtonState(button *state.ButtonState, jsButtons uint32) bool
+	// GetStickState returns the state of the stick with the given id in the range of -1 to 1
+	GetStickState(stick *state.StickState, jsAxis []int) float64
+	// GetButtonStateFromStick returns the state of the stick with the given id as a button
+	GetButtonStateFromStick(button *state.ButtonState, jsAxis []int) bool
 }
 
-func IsTriggered(c Controller, presetMapping config.Mapping, state joystick.State) bool {
-	mapping := c.GetMapping(presetMapping.GetButton())
-	if mapping == nil {
-		return false
-	}
-	switch mapping.Type {
-	case config.InputType_Button:
-		return utils.GetButtonState(state.Buttons, uint32(mapping.Index))
-	case config.InputType_StickAsButton:
-		direction := mapping.Data.(int)
-		axis := state.AxisData[mapping.Index]
-		if direction == 1 {
-			return axis > 0
-		} else if direction == -1 {
-			return axis < 0
+func UpdateStates(controller Controller, states *state.States, js joystick.State) {
+	for _, value := range states.Buttons {
+		if value.IsImplicitStick {
+			value.State = controller.GetButtonStateFromStick(value, js.AxisData)
+		} else {
+			value.State = controller.GetButtonState(value, js.Buttons)
 		}
-		log.Warn().Msgf("Could not handle StickAsButton with direction %v", direction)
-		return false
-	default:
-		log.Warn().Msgf("Could not handle input of type %v", mapping.Type)
-		return false
 	}
-}
-
-func updateButtonStates(js joystick.State, buttons []state.ButtonState) {
-	for i := range buttons {
-		buttons[i].State = utils.GetButtonState(js.Buttons, uint32(buttons[i].Id))
-	}
-}
-
-func updateStickStates(js joystick.State, sticks []state.StickState) {
-	for i := range sticks {
-		sticks[i].State = float64(js.AxisData[sticks[i].Id]) / float64(XboxStickMax)
+	for _, value := range states.Sticks {
+		value.State = controller.GetStickState(value, js.AxisData)
 	}
 }

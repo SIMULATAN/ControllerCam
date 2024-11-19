@@ -1,10 +1,8 @@
 package mappings
 
 import (
-	"controllercontrol/config"
 	"controllercontrol/state"
-	"github.com/0xcafed00d/joystick"
-	"github.com/rs/zerolog/log"
+	"fmt"
 )
 
 const (
@@ -33,120 +31,84 @@ const (
 
 type XboxController struct{}
 
-func (c *XboxController) GetMapping(name string) *config.Input {
-	switch name {
-	case "DpadUp":
-		return &config.Input{
-			Type:  config.InputType_StickAsButton,
-			Index: XboxDpadVertical,
-			Data:  -1,
-		}
-	case "DpadDown":
-		return &config.Input{
-			Type:  config.InputType_StickAsButton,
-			Index: XboxDpadVertical,
-			Data:  1,
-		}
-	case "DpadLeft":
-		return &config.Input{
-			Type:  config.InputType_StickAsButton,
-			Index: XboxDpadHorizontal,
-			Data:  -1,
-		}
-	case "DpadRight":
-		return &config.Input{
-			Type:  config.InputType_StickAsButton,
-			Index: XboxDpadHorizontal,
-			Data:  1,
-		}
-	case "ButtonA":
-		return &config.Input{
-			Type:  config.InputType_Button,
-			Index: XboxOneA,
-		}
-	case "ButtonB":
-		return &config.Input{
-			Type:  config.InputType_Button,
-			Index: XboxOneB,
-		}
-	case "ButtonX":
-		return &config.Input{
-			Type:  config.InputType_Button,
-			Index: XboxOneX,
-		}
-	case "ButtonY":
-		return &config.Input{
-			Type:  config.InputType_Button,
-			Index: XboxOneY,
-		}
-	}
-
-	log.Warn().Msgf("Could not find any input mapping for %v", name)
-	return nil
+func (c *XboxController) GetButtonState(input *state.ButtonState, jsButtons uint32) bool {
+	return jsButtons&(1<<input.Id) != 0
 }
 
-var ButtonA = state.ButtonState{
-	Id:    XboxOneA,
-	Name:  "A",
-	State: false,
-}
-var ButtonB = state.ButtonState{
-	Id:    XboxOneB,
-	Name:  "B",
-	State: false,
-}
-var ButtonX = state.ButtonState{
-	Id:    XboxOneX,
-	Name:  "X",
-	State: false,
-}
-var ButtonY = state.ButtonState{
-	Id:    XboxOneY,
-	Name:  "Y",
-	State: false,
+func (c *XboxController) GetStickState(input *state.StickState, jsAxis []int) float64 {
+	return c.getStickState(jsAxis, input.Id)
 }
 
-var StickLeftX = state.StickState{
-	Id:    XboxLeftStickX,
-	Name:  "Left X",
-	State: 0,
-}
-var StickLeftY = state.StickState{
-	Id:    XboxLeftStickY,
-	Name:  "Left Y",
-	State: 0,
+func (c *XboxController) getStickState(jsAxis []int, id uint) float64 {
+	return float64(jsAxis[id]) / float64(XboxStickMax)
 }
 
-var StickRightX = state.StickState{
-	Id:    XboxRightStickX,
-	Name:  "Right X",
-	State: 0,
-}
-var StickRightY = state.StickState{
-	Id:    XboxRightStickY,
-	Name:  "Right Y",
-	State: 0,
-}
-
-var Buttons = []state.ButtonState{ButtonA, ButtonB, ButtonX, ButtonY}
-var Sticks = []state.StickState{StickLeftX, StickLeftY, StickRightX, StickRightY}
-
-func UpdateIndexes(config config.RemappingsConfig) {
-	for _, btn := range Buttons {
-		remapping, ok := config.Remapping[btn.Name]
-		if ok {
-			btn.Id = remapping
-		}
-	}
-	for _, stick := range Sticks {
-		remapping, ok := config.Remapping[stick.Name]
-		if ok {
-			stick.Id = remapping
-		}
+func (c *XboxController) GetButtonStateFromStick(button *state.ButtonState, jsAxis []int) bool {
+	value := c.getStickState(jsAxis, button.Id)
+	if button.Name == DpadLeft || button.Name == DpadUp {
+		return value < 0
+	} else if button.Name == DpadRight || button.Name == DpadDown {
+		return value > 0
+	} else {
+		fmt.Println("Don't know how to get button state from stick", button.Name)
+		return false
 	}
 }
 
-func UpdateStates(js joystick.State) {
-	updateButtonStates(js, Buttons)
-	updateStickStates(js, Sticks)
+func (c *XboxController) GetInitialStates() state.States {
+	return state.NewStates([]state.ButtonState{
+		{
+			Id:   XboxOneA,
+			Name: ButtonA,
+		},
+		{
+			Id:   XboxOneB,
+			Name: ButtonB,
+		},
+		{
+			Id:   XboxOneX,
+			Name: ButtonX,
+		},
+		{
+			Id:   XboxOneY,
+			Name: ButtonY,
+		},
+		{
+			Id:              XboxDpadHorizontal,
+			Name:            DpadLeft,
+			IsImplicitStick: true,
+		},
+		{
+			Id:              XboxDpadHorizontal,
+			Name:            DpadRight,
+			IsImplicitStick: true,
+		},
+		{
+			Id:              XboxDpadVertical,
+			Name:            DpadUp,
+			IsImplicitStick: true,
+		},
+		{
+			Id:              XboxDpadVertical,
+			Name:            DpadDown,
+			IsImplicitStick: true,
+		},
+	}, []state.StickState{
+		{
+			Id:   XboxLeftStickX,
+			Name: StickLeftX,
+		},
+		{
+			Id:   XboxLeftStickY,
+			Name: StickLeftY,
+		},
+		{
+			Id:   XboxRightStickX,
+			Name: RightStickX,
+		},
+		{
+			Id:   XboxRightStickY,
+			Name: RightStickY,
+		},
+	})
 }

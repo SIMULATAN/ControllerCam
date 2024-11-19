@@ -6,7 +6,7 @@ type Config struct {
 	Cameras                 []CameraConfig   `yaml:"cameras"`
 	JoystickId              int              `yaml:"joystick_id"`
 	Mappings                MappingsConfig   `yaml:"mappings"`
-	Remappings              RemappingsConfig `yaml:"remappings"`
+	Remappings              Remappings       `yaml:"remappings"`
 }
 
 type CameraConfig struct {

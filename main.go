@@ -35,22 +35,29 @@ func run() error {
 	fmt.Printf("   Axis Count: %d\n", js.AxisCount())
 	fmt.Printf(" Button Count: %d\n", js.ButtonCount())
 
-	mappings.UpdateIndexes(cfg.Remappings)
+	var controller mappings.Controller = &mappings.XboxController{}
+	states := controller.GetInitialStates()
 
-	states := state.NewStates(mappings.Buttons, mappings.Sticks)
+	mappings.RemapStateIds(states, cfg.Remappings)
 
-	handler, err := camera.NewProtocolHandler(cfg.Cameras, &mappings.XboxController{})
+	handler, err := camera.NewProtocolHandler(cfg.Cameras, controller)
 	if err != nil {
 		log.Fatalln("Error creating ProtocolHandler!", err)
 	}
 
-	go handleLoop(cfg, js, &states, handler)
+	go handleLoop(cfg, controller, js, &states, handler)
 
 	err = gui.RunGui(&states, handler)
 	return err
 }
 
-func handleLoop(cfg *config.Config, js joystick.Joystick, states *state.States, handler *camera.ProtocolHandler) {
+func handleLoop(
+	cfg *config.Config,
+	controller mappings.Controller,
+	js joystick.Joystick,
+	states *state.States,
+	handler *camera.ProtocolHandler,
+) {
 	for {
 		controllerState, err := js.Read()
 		if err != nil {
@@ -59,10 +66,10 @@ func handleLoop(cfg *config.Config, js joystick.Joystick, states *state.States, 
 			continue
 		}
 
-		mappings.UpdateStates(controllerState)
+		mappings.UpdateStates(controller, states, controllerState)
 		states.UpdateCallback()
 
-		go camera.HandleJoystickInputs(*handler, controllerState, cfg)
+		go camera.HandleJoystickInputs(*handler, *states, cfg)
 
 		time.Sleep(50 * time.Millisecond)
 	}

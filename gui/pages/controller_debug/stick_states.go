@@ -7,21 +7,25 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func stickStates(states *state.States) (fyne.CanvasObject, map[int]*widget.ProgressBar) {
-	sliders := map[int]*widget.ProgressBar{}
-	widgets := make([]fyne.CanvasObject, len(states.Sticks))
+func stickStates(states *state.States) (fyne.CanvasObject, map[string]*widget.ProgressBar) {
+	sliders := map[string]*widget.ProgressBar{}
+	sliderIndexToName := make([]string, 0)
+	for name := range states.Sticks {
+		sliderIndexToName = append(sliderIndexToName, name)
+	}
+	widgets := make([]fyne.CanvasObject, 0)
 	for i, stick := range states.Sticks {
 		slider := widget.NewProgressBar()
 		slider.Min = -1
 		slider.Max = 1
 		sliders[i] = slider
 		label := widget.NewLabel(stick.Name)
-		widgets[i] = container.NewVBox(label, slider)
+		widgets = append(widgets, container.NewVBox(label, slider))
 	}
 	return container.NewVBox(widgets...), sliders
 }
 
-func updateStickStates(sliders map[int]*widget.ProgressBar, states *state.States) {
+func updateStickStates(sliders map[string]*widget.ProgressBar, states *state.States) {
 	for i, stick := range states.Sticks {
 		sliders[i].SetValue(stick.State)
 	}

@@ -4,24 +4,24 @@ import (
 	"cmp"
 	"controllercontrol/config"
 	"controllercontrol/mappings"
+	"controllercontrol/state"
 	"controllercontrol/utils"
-	"github.com/0xcafed00d/joystick"
 	"math"
 )
 
-func HandleJoystickInputs(handler ProtocolHandler, state joystick.State, config *config.Config) {
-	HandleCameraSelection(handler, state, config)
+func HandleJoystickInputs(handler ProtocolHandler, states state.States, config *config.Config) {
+	HandleCameraSelection(handler, states, config)
 	if handler.GetActiveCamera() == nil {
 		return
 	}
-	HandlePanTilt(handler, state, config)
-	HandleZoom(handler, state, config)
-	HandlePresets(handler, state, config)
+	HandlePanTilt(handler, states, config)
+	HandleZoom(handler, states, config)
+	HandlePresets(handler, states, config)
 }
 
-func HandleCameraSelection(handler ProtocolHandler, state joystick.State, cfg *config.Config) {
+func HandleCameraSelection(handler ProtocolHandler, states state.States, cfg *config.Config) {
 	for _, item := range cfg.Mappings.Cameras {
-		if mappings.IsTriggered(handler.controller, &item, state) {
+		if val, err := states.GetButtonState(item.Button); err == nil && val {
 			camera := handler.GetCameraByName(item.Camera)
 			if camera != nil && camera != handler.GetActiveCamera() {
 				handler.SetActiveCamera(camera)
@@ -30,20 +30,27 @@ func HandleCameraSelection(handler ProtocolHandler, state joystick.State, cfg *c
 	}
 }
 
-func HandlePanTilt(handler ProtocolHandler, state joystick.State, cfg *config.Config) {
+func HandlePanTilt(handler ProtocolHandler, states state.States, cfg *config.Config) {
+	x, err := states.GetStickState(mappings.StickLeftX)
+	if err != nil {
+		return
+	}
+	y, err := states.GetStickState(mappings.StickLeftY)
+	if err != nil {
+		return
+	}
+
 	camera := handler.GetActiveCamera()
 	props := camera.Config.Properties
 	defaultCam := cfg.DefaultCameraProperties
 	step := *cmp.Or(props.Step, defaultCam.Step, &config.DefaultStep)
 
-	panPercentRaw := float64(state.AxisData[mappings.XboxLeftStickX]) / mappings.XboxStickMax
-	panPercent := utils.CalculateExponentialValue(panPercentRaw, cfg.Controller.PanTiltExponent)
+	panPercent := utils.CalculateExponentialValue(x, cfg.Controller.PanTiltExponent)
 	panOffset := int16(math.RoundToEven(panPercent * step))
 	PanSpeed := *cmp.Or(props.PanSpeed, defaultCam.PanSpeed, &config.DefaultSpeed)
 	panSpeed := int16(float64(PanSpeed) * panPercent)
 
-	tiltPercentRaw := float64(state.AxisData[mappings.XboxLeftStickY]) / mappings.XboxStickMax
-	tiltPercent := utils.CalculateExponentialValue(tiltPercentRaw, cfg.Controller.PanTiltExponent)
+	tiltPercent := utils.CalculateExponentialValue(y, cfg.Controller.PanTiltExponent)
 	tiltOffset := -1 * int16(math.RoundToEven(tiltPercent*step))
 	TiltSpeed := *cmp.Or(props.TiltSpeed, defaultCam.TiltSpeed, &config.DefaultSpeed)
 	tiltSpeed := int16(float64(TiltSpeed) * tiltPercent)
@@ -56,15 +63,19 @@ func HandlePanTilt(handler ProtocolHandler, state joystick.State, cfg *config.Co
 		true,
 	)
 
-	if (tiltOffset != 0 && math.Abs(tiltPercentRaw) > mappings.XboxDeadzone) || (panOffset != 0 && math.Abs(panPercentRaw) > mappings.XboxDeadzone) {
+	if (tiltOffset != 0 && math.Abs(y) > mappings.XboxDeadzone) || (panOffset != 0 && math.Abs(x) > mappings.XboxDeadzone) {
 		camera.SendPacketYolo(byteSlice)
 	}
 }
 
 var lastZoomOffset int8
 
-func HandleZoom(handler ProtocolHandler, state joystick.State, config *config.Config) {
-	zoom := -1 * float64(state.AxisData[mappings.XboxRightStickY]) / mappings.XboxStickMax
+func HandleZoom(handler ProtocolHandler, states state.States, config *config.Config) {
+	measurement, err := states.GetStickState(mappings.RightStickY)
+	if err != nil {
+		return
+	}
+	zoom := -1 * measurement
 
 	// if within deadzone, send zoom = 0
 	if math.Abs(zoom) < mappings.XboxDeadzone {
@@ -84,9 +95,9 @@ func HandleZoom(handler ProtocolHandler, state joystick.State, config *config.Co
 	lastZoomOffset = zoomOffset
 }
 
-func HandlePresets(handler ProtocolHandler, state joystick.State, cfg *config.Config) {
+func HandlePresets(handler ProtocolHandler, states state.States, cfg *config.Config) {
 	for _, item := range cfg.Mappings.Presets {
-		if mappings.IsTriggered(handler.controller, &item, state) {
+		if val, err := states.GetButtonState(item.Button); err == nil && val {
 			camera := handler.GetActiveCamera()
 			camera.SendPacketYolo(camera.Model.RecallPreset(item.Preset))
 		}
