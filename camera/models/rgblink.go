@@ -48,6 +48,40 @@ func (s *RGBLink) RecallPreset(number uint8) []byte {
 	return []byte{0x01, 0x04, 0x3F, 0x02, number}
 }
 
+const (
+	CamMax = 24
+)
+
+func (s *RGBLink) PanTilt(panSpeed, tiltSpeed, panPosition, tiltPosition int16, relative bool) []byte {
+	if utils.Abs(panSpeed) > CamMax {
+		panSpeed = CamMax * panSpeed / utils.Abs(panSpeed)
+	}
+	if utils.Abs(tiltSpeed) > CamMax {
+		tiltSpeed = CamMax * tiltSpeed / utils.Abs(tiltSpeed)
+	}
+
+	panSpeedByte := byte(utils.Abs(panSpeed))
+	tiltSpeedByte := byte(utils.Abs(tiltSpeed))
+
+	var relativeByte byte
+	if relative {
+		relativeByte = 0x03
+	} else {
+		relativeByte = 0x02
+	}
+
+	bytes := []byte{
+		0x01,
+		0x06,
+		relativeByte,
+		panSpeedByte,
+		tiltSpeedByte,
+	}
+	bytes = append(bytes, Encode(panPosition)...)
+	bytes = append(bytes, Encode(tiltPosition)...)
+	return bytes
+}
+
 func (s *RGBLink) InterpretResponse(bytes []byte) string {
 	message := []byte{bytes[1]}
 	if utils.BytesEqual(message, RETURN_ACK) {
