@@ -86,7 +86,8 @@ func HandleZoom(handler ProtocolHandler, state joystick.State, config *config.Co
 func HandlePresets(handler ProtocolHandler, state joystick.State, cfg *config.Config) {
 	for _, item := range cfg.Mappings.Presets {
 		if mappings.IsTriggered(handler.controller, &item, state) {
-			handler.GetActiveCamera().SendPacketYolo(RecallPreset(item.Preset))
+			camera := handler.GetActiveCamera()
+			camera.SendPacketYolo(camera.Model.RecallPreset(item.Preset))
 		}
 	}
 }

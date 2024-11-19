@@ -131,6 +131,21 @@ var StickRightY = state.StickState{
 var Buttons = []state.ButtonState{ButtonA, ButtonB, ButtonX, ButtonY}
 var Sticks = []state.StickState{StickLeftX, StickLeftY, StickRightX, StickRightY}
 
+func UpdateIndexes(config config.RemappingsConfig) {
+	for _, btn := range Buttons {
+		remapping, ok := config.Remapping[btn.Name]
+		if ok {
+			btn.Id = remapping
+		}
+	}
+	for _, stick := range Sticks {
+		remapping, ok := config.Remapping[stick.Name]
+		if ok {
+			stick.Id = remapping
+		}
+	}
+}
+
 func UpdateStates(js joystick.State) {
 	updateButtonStates(js, Buttons)
 	updateStickStates(js, Sticks)

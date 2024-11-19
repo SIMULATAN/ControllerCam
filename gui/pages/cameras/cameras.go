@@ -35,9 +35,9 @@ func refresh(list *widget.List) {
 }
 
 func update(id int, object fyne.CanvasObject, handler *camera.ProtocolHandler) {
-	cam := (handler).GetCameras()[id]
+	cam := handler.GetCameras()[id]
 	var connectText string
-	if cam.Conn != nil {
+	if cam.Conn.IsConnected() {
 		connectText += "Connected!"
 	} else {
 		connectText += "Disconnected"

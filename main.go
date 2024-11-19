@@ -35,6 +35,8 @@ func run() error {
 	fmt.Printf("   Axis Count: %d\n", js.AxisCount())
 	fmt.Printf(" Button Count: %d\n", js.ButtonCount())
 
+	mappings.UpdateIndexes(cfg.Remappings)
+
 	states := state.NewStates(mappings.Buttons, mappings.Sticks)
 
 	handler, err := camera.NewProtocolHandler(cfg.Cameras, &mappings.XboxController{})

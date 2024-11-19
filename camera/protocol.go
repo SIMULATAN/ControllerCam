@@ -3,51 +3,21 @@ package camera
 import (
 	"controllercontrol/config"
 	"controllercontrol/mappings"
-	"controllercontrol/utils"
 	"fmt"
 	"fyne.io/fyne/v2/data/binding"
-	"github.com/josh23french/visca"
 )
-
-func RunLogQueue(queue chan *visca.Packet) {
-	for {
-		packet := <-queue
-		fmt.Println(InterpretResponse(packet))
-	}
-}
-
-func BuildPacket(bytes []byte) (*visca.Packet, error) {
-	packet, err := visca.NewPacket(0, 1, bytes)
-	if packet != nil {
-		fmt.Println(utils.DumpByteSlice(packet.Bytes()))
-	}
-	return packet, err
-}
-
-func InterpretResponse(packet *visca.Packet) string {
-	message := packet.Message
-	if utils.BytesEqual(message, RETURN_ACK) {
-		return "[SUC] ACK"
-	} else if utils.BytesEqual(message, RETURN_Completion) {
-		return "[SUC] Completion"
-	} else if utils.BytesEqual(message, RETURN_SyntaxError) {
-		return "[ERR] Syntax Error"
-	} else if utils.BytesEqual(message, RETURN_CommandNotExecutable) {
-		return "[ERR] Command not executable"
-	}
-
-	return utils.DumpByteSlice(packet.Message)
-}
-
-type Camera struct {
-	Conn   *visca.Connection
-	Config config.CameraConfig
-}
 
 type ProtocolHandler struct {
 	controller   mappings.Controller
-	cameras      []Camera
+	cameras      []*Camera
 	ActiveCamera binding.Untyped
+}
+
+func RunLogQueue(camera *Camera, queue chan *[]byte) {
+	for {
+		packet := <-queue
+		fmt.Println(camera.Model.InterpretResponse(*packet))
+	}
 }
 
 func (p *ProtocolHandler) GetActiveCamera() *Camera {
@@ -69,40 +39,39 @@ func (p *ProtocolHandler) SetActiveCamera(camera *Camera) {
 	}
 }
 
-func (p *ProtocolHandler) GetCameras() []Camera {
+func (p *ProtocolHandler) GetCameras() []*Camera {
 	return p.cameras
 }
 
 func (p *ProtocolHandler) GetCameraByName(name string) *Camera {
 	for _, camera := range p.cameras {
 		if camera.Config.Name == name {
-			return &camera
+			return camera
 		}
 	}
 	return nil
 }
 
 func NewProtocolHandler(cameraConfigs []config.CameraConfig, controller mappings.Controller) (*ProtocolHandler, error) {
-	cameras := make([]Camera, len(cameraConfigs))
+	cameras := make([]*Camera, len(cameraConfigs))
 	for i, camera := range cameraConfigs {
-		conn, err := visca.NewConnectionFromString(camera.Host)
+		model, err := CreateFromCameraConfig(camera)
 		if err != nil {
 			return nil, err
 		}
 
-		queue := make(chan *visca.Packet)
+		conn := model.Connect(camera)
+		queue := make(chan *[]byte)
 		conn.SetReceiveQueue(queue)
-		go RunLogQueue(queue)
-		err = conn.Start()
 
-		var connection *visca.Connection = nil
-		if err == nil {
-			connection = &conn
-		}
-		cameras[i] = Camera{
-			Conn:   connection,
+		camera := Camera{
+			Model:  model,
 			Config: camera,
+			Conn:   conn,
 		}
+		cameras[i] = &camera
+
+		go RunLogQueue(&camera, queue)
 	}
 
 	if len(cameras) == 0 {
@@ -120,14 +89,8 @@ func NewProtocolHandler(cameraConfigs []config.CameraConfig, controller mappings
 
 func (c *Camera) SendPacket(bytes []byte) error {
 	// Send the packet we created
-	packet, err := BuildPacket(bytes)
-	if err != nil {
-		return err
-	}
-	if c.Conn == nil {
-		return fmt.Errorf("camera connection isn't open")
-	}
-	err = (*c.Conn).Send(packet)
+	packet := c.Model.CreatePacket(bytes)
+	err := c.Conn.Send(packet)
 	return err
 }
 
