@@ -1,7 +1,7 @@
 package state
 
 type StickState struct {
-	Id   uint
+	Id   int
 	Name string
 	// position from -1 to 1
 	State float64

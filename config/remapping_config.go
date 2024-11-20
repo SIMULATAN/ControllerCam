@@ -1,3 +1,3 @@
 package config
 
-type Remappings map[string]uint
+type Remappings map[string]int

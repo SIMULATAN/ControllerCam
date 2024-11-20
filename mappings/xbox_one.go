@@ -39,7 +39,10 @@ func (c *XboxController) GetStickState(input *state.StickState, jsAxis []int) fl
 	return c.getStickState(jsAxis, input.Id)
 }
 
-func (c *XboxController) getStickState(jsAxis []int, id uint) float64 {
+func (c *XboxController) getStickState(jsAxis []int, id int) float64 {
+	if id == -1 {
+		return 0
+	}
 	return float64(jsAxis[id]) / float64(XboxStickMax)
 }
 

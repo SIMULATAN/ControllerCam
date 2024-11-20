@@ -1,7 +1,7 @@
 package state
 
 type ButtonState struct {
-	Id              uint
+	Id              int
 	Name            string
 	State           bool
 	IsImplicitStick bool
