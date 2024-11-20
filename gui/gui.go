@@ -16,6 +16,7 @@ var topWindow fyne.Window
 func RunGui(states *state.States, handler *camera.ProtocolHandler) error {
 	a := app.NewWithID("me.simulatan.controllercam")
 	window := a.NewWindow("ControllerCam")
+	window.Resize(fyne.NewSize(800, 600))
 	topWindow = window
 	a.SetIcon(resourceLogoPng)
 
