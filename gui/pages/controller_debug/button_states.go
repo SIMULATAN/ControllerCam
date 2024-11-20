@@ -2,6 +2,7 @@ package gui
 
 import (
 	"controllercontrol/state"
+	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
@@ -13,6 +14,7 @@ func buttonStates(states *state.States) (fyne.CanvasObject, map[string]*widget.I
 	iconIndexToName := make([]string, 0)
 	for name, states := range states.Buttons {
 		if states.Id == -1 {
+			fmt.Println("ID of button", name, "is -1, ignoring")
 			continue
 		}
 		iconIndexToName = append(iconIndexToName, name)
@@ -46,6 +48,10 @@ func buttonStates(states *state.States) (fyne.CanvasObject, map[string]*widget.I
 
 func updateButtonStates(icons map[string]*widget.Icon, states *state.States) {
 	for name, s := range states.Buttons {
+		if icons[name] == nil {
+			//some things may be unmapped
+			continue
+		}
 		setStateIcon(icons[name], *s)
 	}
 }
