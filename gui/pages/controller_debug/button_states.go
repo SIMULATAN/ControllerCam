@@ -14,6 +14,7 @@ func buttonStates(states *state.States) (fyne.CanvasObject, map[string]*widget.I
 	iconIndexToName := make([]string, 0)
 	for name, states := range states.Buttons {
 		if states.Id == -1 {
+			fmt.Println("ID of button", name, "is -1, ignoring")
 			continue
 		}
 		iconIndexToName = append(iconIndexToName, name)
@@ -47,10 +48,10 @@ func buttonStates(states *state.States) (fyne.CanvasObject, map[string]*widget.I
 
 func updateButtonStates(icons map[string]*widget.Icon, states *state.States) {
 	for name, s := range states.Buttons {
-		if s.Id == -1 {
+		if icons[name] == nil {
+			fmt.Println("No icon for", name, "in", icons)
 			continue
 		}
-		fmt.Println(icons, icons[name], *s)
 		setStateIcon(icons[name], *s)
 	}
 }
