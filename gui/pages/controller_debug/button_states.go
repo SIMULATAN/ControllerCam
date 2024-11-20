@@ -49,7 +49,7 @@ func buttonStates(states *state.States) (fyne.CanvasObject, map[string]*widget.I
 func updateButtonStates(icons map[string]*widget.Icon, states *state.States) {
 	for name, s := range states.Buttons {
 		if icons[name] == nil {
-			fmt.Println("No icon for", name, "in", icons)
+			//some things may be unmapped
 			continue
 		}
 		setStateIcon(icons[name], *s)
