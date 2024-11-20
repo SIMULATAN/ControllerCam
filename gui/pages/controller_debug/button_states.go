@@ -11,7 +11,10 @@ import (
 
 func buttonStates(states *state.States) (fyne.CanvasObject, map[string]*widget.Icon) {
 	iconIndexToName := make([]string, 0)
-	for name := range states.Buttons {
+	for name, states := range states.Buttons {
+		if states.Id == -1 {
+			continue
+		}
 		iconIndexToName = append(iconIndexToName, name)
 	}
 	// go iteration order is not guaranteed, so we sort the names
@@ -20,7 +23,7 @@ func buttonStates(states *state.States) (fyne.CanvasObject, map[string]*widget.I
 
 	list := widget.NewList(
 		func() int {
-			return len(states.Buttons)
+			return len(iconIndexToName)
 		},
 		func() fyne.CanvasObject {
 			icon := widget.NewIcon(theme.CancelIcon())
