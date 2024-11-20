@@ -46,6 +46,9 @@ func buttonStates(states *state.States) (fyne.CanvasObject, map[string]*widget.I
 
 func updateButtonStates(icons map[string]*widget.Icon, states *state.States) {
 	for name, s := range states.Buttons {
+		if s.Id == -1 {
+			continue
+		}
 		setStateIcon(icons[name], *s)
 	}
 }
