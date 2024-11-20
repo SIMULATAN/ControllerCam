@@ -2,6 +2,7 @@ package gui
 
 import (
 	"controllercontrol/state"
+	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
@@ -49,6 +50,7 @@ func updateButtonStates(icons map[string]*widget.Icon, states *state.States) {
 		if s.Id == -1 {
 			continue
 		}
+		fmt.Println(icons, icons[name], *s)
 		setStateIcon(icons[name], *s)
 	}
 }
