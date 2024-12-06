@@ -46,3 +46,5 @@ require (
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 )
+
+replace github.com/0xcafed00d/joystick => github.com/simulatan/go-joystick v0.0.0-20241206103935-3a3c9a1ae100
