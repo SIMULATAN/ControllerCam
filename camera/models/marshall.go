@@ -38,9 +38,9 @@ func (s *Marshall) RecallPreset(number uint8) []byte {
 }
 
 func (s *Marshall) PanTilt(panSpeed, tiltSpeed, panPosition, tiltPosition int16, relative bool) []byte {
-	// Pan-tiltPosInq
-	panSpeedByte := byte(utils.Abs(panSpeed))
-	tiltSpeedByte := byte(utils.Abs(tiltSpeed))
+	// Pan-tiltDrive
+	panSpeedByte := byte(max(0x01, min(utils.Abs(panSpeed), 0x18)))
+	tiltSpeedByte := byte(max(0x01, min(utils.Abs(tiltSpeed), 0x18)))
 
 	var relativeByte byte
 	if relative {

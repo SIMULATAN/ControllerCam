@@ -6,6 +6,7 @@ import (
 	"controllercontrol/mappings"
 	"controllercontrol/state"
 	"controllercontrol/utils"
+	"fmt"
 	"math"
 )
 
@@ -55,6 +56,11 @@ func HandlePanTilt(handler ProtocolHandler, states state.States, cfg *config.Con
 	TiltSpeed := *cmp.Or(props.TiltSpeed, defaultCam.TiltSpeed, &config.DefaultSpeed)
 	tiltSpeed := int16(float64(TiltSpeed) * tiltPercent)
 
+	if !(tiltOffset != 0 && math.Abs(y) > mappings.XboxDeadzone) && !(panOffset != 0 && math.Abs(x) > mappings.XboxDeadzone) {
+		return
+	}
+	fmt.Println("PanOffset: ", panOffset, "TiltOffset: ", tiltOffset, "PanSpeed: ", panSpeed, "TiltSpeed: ", tiltSpeed)
+
 	byteSlice := camera.Model.PanTilt(
 		panSpeed,
 		tiltSpeed,
@@ -63,9 +69,7 @@ func HandlePanTilt(handler ProtocolHandler, states state.States, cfg *config.Con
 		true,
 	)
 
-	if (tiltOffset != 0 && math.Abs(y) > mappings.XboxDeadzone) || (panOffset != 0 && math.Abs(x) > mappings.XboxDeadzone) {
-		camera.SendPacketYolo(byteSlice)
-	}
+	camera.SendPacketYolo(byteSlice)
 }
 
 var lastZoomOffset int8
