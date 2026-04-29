@@ -37,6 +37,10 @@ func (c *States) GetButtonState(button string) (bool, error) {
 
 func (c *States) GetStickState(button string) (float64, error) {
 	if stick := c.Sticks[button]; stick != nil {
+		if stick.Invert {
+			return -1 * stick.State, nil
+		}
+
 		return stick.State, nil
 	}
 	return 0, noMeasurement

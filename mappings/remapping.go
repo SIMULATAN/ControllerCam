@@ -21,6 +21,9 @@ func RemapStateIds(states state.States, config config.Remappings) {
 			if value.Name != nil {
 				stick.Name = *value.Name
 			}
+			if value.Invert != nil {
+				stick.Invert = *value.Invert
+			}
 		}
 	}
 }
